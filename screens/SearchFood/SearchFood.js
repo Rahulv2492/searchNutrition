@@ -6,6 +6,7 @@ import plus from './../../assets/img/plus.png';
 import loader from './../../assets/img/loader.gif';
 import { BASE_URL, AUTH_TOKEN } from './../../constants'
 import { Loader } from '../../Components';
+import { getFoodData } from './../../utils/api'
 // import Icon from 'react-native-vector-icons/FontAwesome';
 
 
@@ -40,8 +41,13 @@ class SearchFood extends Component {
             searchText: '',
             foodData: [],
             pageNo: 0,
-            isFetching: false
+            isFetching: false,
+            access_token: ''
         }
+    }
+
+    componentDidMount() {
+
     }
     handleSearch = (searchText) => {
         this.setState({
@@ -56,31 +62,14 @@ class SearchFood extends Component {
     }
 
     getFood = (pageNo) => {
-        console.log("pageNo", pageNo)
-        const { searchText, foodData } = this.state;
-        axios.request({
-            method: 'POST',
-            baseURL: BASE_URL,
-            url: 'rest/server.api',
-            params: {
-                method: "foods.search",
-                format: "json",
-                search_expression: searchText,
-                page_number: pageNo,
-                max_results: 40
-
-            },
-            headers: {
-                "Authorization": AUTH_TOKEN,
-                "Content-Type": "application/json"
-            }
-        }).then(res => {
+        const { searchText, foodData, access_token } = this.state;
+        getFoodData(searchText, pageNo, this.props.token).then(res =>
             this.setState({
-                foodData: pageNo > 0 ? [...foodData, ...res.data.foods.food] : res.data.foods.food,
+                foodData: pageNo > 0 ? [...foodData, ...res] : res,
                 pageNo,
                 isFetching: false
             })
-        })
+        ).catch(err => console.log(err))
     }
     render() {
         const { foodData, searchText, pageNo, isFetching } = this.state;
@@ -93,7 +82,7 @@ class SearchFood extends Component {
                 <View>
                     {isFetching &&
                         <View style={{
-                            height: Dimensions.get('screen').height - 200,
+                            height: Dimensions.get('screen').height - 20,
                             justifyContent: 'center',
                             alignItems: 'center',
                         }}>
